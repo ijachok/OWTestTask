@@ -63,6 +63,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
 
+    //coil image lib
+    implementation(libs.coil.compose)
+
     //hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

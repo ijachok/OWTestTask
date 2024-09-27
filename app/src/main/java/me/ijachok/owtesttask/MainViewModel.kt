@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import me.ijachok.owtesttask.data.RepositoryImpl
 import me.ijachok.owtesttask.model.ContentType
 import me.ijachok.owtesttask.model.Ids
+import me.ijachok.owtesttask.model.TypeObject
 import javax.inject.Inject
 
 @HiltViewModel
@@ -22,8 +23,8 @@ class MainViewModel @Inject constructor(private val repository: RepositoryImpl) 
     private val _isNavigating = MutableStateFlow(false)
     val isNavigating = _isNavigating.asStateFlow()
 
-    private val _contentType = MutableStateFlow(ContentType.GAME)
-    val contentType = _contentType.asStateFlow()
+    private val _contentFromApi = MutableStateFlow(TypeObject(0,""))
+    val contentFromApi = _contentFromApi.asStateFlow()
 
     private var allIds: Ids? = null
     private var currentTypeId = 0
@@ -35,11 +36,14 @@ class MainViewModel @Inject constructor(private val repository: RepositoryImpl) 
     fun firstStart() {
         viewModelScope.launch {
             _isLoading.value = true
-            repository.getAllIds().collectLatest { ids ->
-                allIds = ids
-                currentTypeId = ids.data.first().id
-                repository.getTypeByID(currentTypeId).collectLatest { typeObject ->
-                    _contentType.value = typeObject.type
+            repository.getAllIds().collectLatest { idsResponse ->
+                if(idsResponse.success && idsResponse.data != null){
+                    allIds = idsResponse.data
+                    currentTypeId = idsResponse.data.data.first().id
+                    repository.getTypeByID(currentTypeId).collectLatest { typeObjectResponse ->
+                        if(typeObjectResponse.success && typeObjectResponse.data != null)
+                            _contentFromApi.value = typeObjectResponse.data
+                    }
                 }
             }
             _isLoading.value = false
@@ -49,19 +53,21 @@ class MainViewModel @Inject constructor(private val repository: RepositoryImpl) 
 
 
     fun nextType() {
-        Log.d("abba", "nextType: ${_contentType.value}")
         if (!_isNavigating.value) {
             viewModelScope.launch {
                 _isNavigating.value = true
                 allIds?.let { currentIds ->
-
                     currentTypeId =
                         if (currentTypeId == currentIds.data.last().id)
                             currentIds.data.first().id
                         else currentTypeId + 1
 
-                    repository.getTypeByID(currentTypeId).collectLatest { response ->
-                       if (response.type != ContentType.GAME) _contentType.value = response.type
+                    repository.getTypeByID(currentTypeId).collectLatest { typeObjectResponse ->
+                        if (typeObjectResponse.success && typeObjectResponse.data != null){
+                            if (typeObjectResponse.data.type != ContentType.GAME) {
+                                _contentFromApi.value = typeObjectResponse.data
+                            }
+                        }
                     }
                 }
                 _isNavigating.value = false
@@ -71,16 +77,17 @@ class MainViewModel @Inject constructor(private val repository: RepositoryImpl) 
 
     fun getAllIds() {
         viewModelScope.launch {
-            repository.getAllIds().collectLatest { response ->
-                Log.d("abba", "getAllIds: ${response.data}")
+            repository.getAllIds().collectLatest { idsResponse ->
+                Log.d("abba", "getAllIds: ${idsResponse.data}")
             }
         }
     }
 
     fun getTypeByID(id: Int) {
         viewModelScope.launch {
-            repository.getTypeByID(id).collectLatest { response ->
-                Log.d("abba", "getAllIds: ${response.type}")
+            repository.getTypeByID(id).collectLatest { typeObjectResponse ->
+
+                Log.d("abba", "getAllIds: ${typeObjectResponse.data}")
             }
         }
     }

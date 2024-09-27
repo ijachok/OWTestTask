@@ -8,8 +8,8 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class App:Application(){
-    private val TAG = "AFApplication"
-    private val AF_DEV_KEY = "sQ84wpdxRTR4RMCaE9YqS4"
+    private val TAG = "AFApp"
+    private val AF_DEV_KEY = "DEV_KEY"
 
     @Override
     override fun onCreate() {
@@ -18,10 +18,7 @@ class App:Application(){
             object : AppsFlyerConversionListener {
                 override fun onConversionDataSuccess(conversionData: Map<String, Any>) {
                     for (attrName in conversionData.keys) {
-                        Log.d(
-                            TAG, "ConversionData: " + attrName + " = " +
-                                    conversionData[attrName]
-                        )
+                        Log.d(TAG, "ConversionData: $attrName = ${conversionData[attrName]}")
                     }
                 }
 
@@ -31,10 +28,7 @@ class App:Application(){
 
                 override fun onAppOpenAttribution(conversionData: Map<String, String>) {
                     for (attrName in conversionData.keys) {
-                        Log.d(
-                            TAG, "OnAppOpenAttribute: " + attrName + " = " +
-                                    conversionData[attrName]
-                        )
+                        Log.d(TAG, "OnAppOpenAttribute: $attrName = ${conversionData[attrName]}")
                     }
                 }
 

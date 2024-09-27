@@ -81,6 +81,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import dagger.hilt.android.AndroidEntryPoint
 import me.ijachok.owtesttask.model.ContentType
 import me.ijachok.owtesttask.ui.theme.OWTestTaskTheme
@@ -120,7 +121,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val mainViewModel = hiltViewModel<MainViewModel>()
-            val contentType by mainViewModel.contentType.collectAsState()
+            val contentType by mainViewModel.contentFromApi.collectAsState()
             val isLoading by mainViewModel.isLoading.collectAsState()
             val isNavigating by mainViewModel.isNavigating.collectAsState()
             OWTestTaskTheme {
@@ -159,7 +160,7 @@ class MainActivity : ComponentActivity() {
                                 contentAlignment = Alignment.Center,
                                 targetState = contentType
                             ) { targetType ->
-                                when (targetType) {
+                                when (targetType.type) {
                                     ContentType.TEXT -> {
                                         Box(
                                             Modifier
@@ -168,19 +169,19 @@ class MainActivity : ComponentActivity() {
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
-                                                "jGWG KVwgd VWkg VkEWG v Gev GveGH v A e efSe Se fS efE fasE fs ef s",
+                                                targetType.message ?: "",
                                                 textAlign = TextAlign.Center
                                             )
                                         }
                                     }
 
                                     ContentType.WEB_VIEW -> {
-                                        MyWebView(Modifier.fillMaxSize())
+                                        MyWebView(Modifier.fillMaxSize(), targetType.url ?: "")
                                     }
 
-                                    else -> {
-                                        Image(
-                                            painterResource(R.drawable.ic_launcher_background),
+                                    ContentType.IMAGE -> {
+                                        AsyncImage(
+                                            model = targetType.url,
                                             contentDescription = null,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = ContentScale.Crop
@@ -216,7 +217,7 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     @Composable
-    fun MyWebView(modifier: Modifier = Modifier) {
+    fun MyWebView(modifier: Modifier = Modifier, link: String) {
         var isShowDialog by remember { mutableStateOf(false) }
         val context = LocalContext.current
         val webView = remember {
@@ -248,7 +249,8 @@ class MainActivity : ComponentActivity() {
                 scrollBarStyle = View.SCROLLBARS_INSIDE_OVERLAY
                 requestFocus(View.FOCUS_DOWN)
                 setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                loadUrl("https://postimages.org/")
+                // loadUrl("https://postimages.org/") //test uploading photos
+                loadUrl(link)
                 scrollBarStyle = WebView.SCROLLBARS_OUTSIDE_OVERLAY
                 this.webViewClient = object : WebViewClient() {
                     override fun shouldOverrideUrlLoading(
